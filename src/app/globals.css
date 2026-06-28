@@ -1,36 +1,235 @@
 @import "tailwindcss";
 
 /*
- * Design tokens (Tailwind v4 `@theme`).
- * Add semantic colors / fonts here so they're available as utilities
- * (e.g. `bg-brand-600`, `text-brand-50`) across every module.
+ * ErgoSoft Systems design tokens.
+ * Source of truth: docs/DESIGN.md. Light values are the published spec;
+ * dark values are derived from the same Material-3 palette (the spec is
+ * light-only). Semantic colors are declared in `@theme inline` so they can
+ * flip per color scheme; static tokens (radius, type, fixed colors) live in
+ * the plain `@theme` block below.
  */
+
 @theme {
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
+  /* Typography ---------------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Menlo", monospace;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Type scale (font-size + line-height + weight + tracking) */
+  --text-headline-lg: 2rem; /* 32px */
+  --text-headline-lg--line-height: 2.5rem;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg--letter-spacing: -0.02em;
+
+  --text-headline-md: 1.5rem; /* 24px */
+  --text-headline-md--line-height: 2rem;
+  --text-headline-md--font-weight: 600;
+  --text-headline-md--letter-spacing: -0.01em;
+
+  --text-headline-sm: 1.25rem; /* 20px */
+  --text-headline-sm--line-height: 1.75rem;
+  --text-headline-sm--font-weight: 600;
+
+  --text-body-lg: 1rem; /* 16px */
+  --text-body-lg--line-height: 1.5rem;
+
+  --text-body-md: 0.875rem; /* 14px */
+  --text-body-md--line-height: 1.25rem;
+
+  --text-body-sm: 0.8125rem; /* 13px */
+  --text-body-sm--line-height: 1.125rem;
+
+  --text-label-md: 0.75rem; /* 12px */
+  --text-label-md--line-height: 1rem;
+  --text-label-md--font-weight: 500;
+  --text-label-md--letter-spacing: 0.05em;
+
+  /* Radius — ErgoSoft "Soft" shape language (buttons 8px, cards 12–16px) */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.5rem; /* 8px — inputs & buttons */
+  --radius-lg: 0.75rem; /* 12px — cards */
+  --radius-xl: 1rem; /* 16px — large cards */
+  --radius-2xl: 1.5rem; /* 24px — sections */
+
+  /* Elevation — Level 2 (popovers/modals); Level 0/1 use tonal layering */
+  --shadow-elevation-2: 0px 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* Static "fixed" colors (identical across light & dark, per M3) */
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #003ea8;
+  --color-secondary-fixed: #d3e4fe;
+  --color-secondary-fixed-dim: #b7c8e1;
+  --color-on-secondary-fixed: #0b1c30;
+  --color-on-secondary-fixed-variant: #38485d;
+  --color-tertiary-fixed: #ffdbcd;
+  --color-tertiary-fixed-dim: #ffb596;
+  --color-on-tertiary-fixed: #360f00;
+  --color-on-tertiary-fixed-variant: #7d2d00;
 }
 
+/* Semantic colors — referenced as vars so they swap with the color scheme. */
+@theme inline {
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-variant: var(--surface-variant);
+
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-inverse-primary: var(--inverse-primary);
+
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-surface-tint: var(--surface-tint);
+
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  /* Success is not in the spec; derived to match the desaturated palette. */
+  --color-success: var(--success);
+  --color-on-success: var(--on-success);
+  --color-success-container: var(--success-container);
+  --color-on-success-container: var(--on-success-container);
+}
+
+/* Light theme — the published ErgoSoft spec. */
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
+  --background: #f7f9fb;
+  --on-background: #191c1e;
+
+  --surface: #f7f9fb;
+  --surface-dim: #d8dadc;
+  --surface-bright: #f7f9fb;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f4f6;
+  --surface-container: #eceef0;
+  --surface-container-high: #e6e8ea;
+  --surface-container-highest: #e0e3e5;
+  --surface-variant: #e0e3e5;
+
+  --on-surface: #191c1e;
+  --on-surface-variant: #434655;
+
+  --inverse-surface: #2d3133;
+  --inverse-on-surface: #eff1f3;
+  --inverse-primary: #b4c5ff;
+
+  --outline: #737686;
+  --outline-variant: #c3c6d7;
+  --surface-tint: #0053db;
+
+  --primary: #004ac6;
+  --on-primary: #ffffff;
+  --primary-container: #2563eb;
+  --on-primary-container: #eeefff;
+
+  --secondary: #505f76;
+  --on-secondary: #ffffff;
+  --secondary-container: #d0e1fb;
+  --on-secondary-container: #54647a;
+
+  --tertiary: #943700;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #bc4800;
+  --on-tertiary-container: #ffede6;
+
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+
+  --success: #2e6a4b;
+  --on-success: #ffffff;
+  --success-container: #b6f2cf;
+  --on-success-container: #00210f;
 }
 
+/* Dark theme — the published "ErgoSoft Dark" spec (docs/DESIGN.dark.md). */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
+    --background: #081425;
+    --on-background: #d8e3fb;
+
+    --surface: #081425;
+    --surface-dim: #081425;
+    --surface-bright: #2f3a4c;
+    --surface-container-lowest: #040e1f;
+    --surface-container-low: #111c2d;
+    --surface-container: #152031;
+    --surface-container-high: #1f2a3c;
+    --surface-container-highest: #2a3548;
+    --surface-variant: #2a3548;
+
+    --on-surface: #d8e3fb;
+    --on-surface-variant: #c1c7d3;
+
+    --inverse-surface: #d8e3fb;
+    --inverse-on-surface: #263143;
+    --inverse-primary: #0060ac;
+
+    --outline: #8b919d;
+    --outline-variant: #414751;
+    --surface-tint: #a4c9ff;
+
+    --primary: #a4c9ff;
+    --on-primary: #00315d;
+    --primary-container: #60a5fa;
+    --on-primary-container: #003a6b;
+
+    --secondary: #b9c8de;
+    --on-secondary: #233143;
+    --secondary-container: #39485a;
+    --on-secondary-container: #a7b6cc;
+
+    --tertiary: #bdc2ff;
+    --on-tertiary: #131e8c;
+    --tertiary-container: #909aff;
+    --on-tertiary-container: #1f2994;
+
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+
+    /* Success is not in either spec; kept consistent with the dark palette. */
+    --success: #9bd5b0;
+    --on-success: #00391f;
+    --success-container: #1b5138;
+    --on-success-container: #b6f2cf;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-on-background);
   font-family: var(--font-sans);
 }

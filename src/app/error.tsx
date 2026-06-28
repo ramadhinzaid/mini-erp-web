@@ -25,10 +25,10 @@ export default function Error({
       <div className="max-w-sm space-y-4">
         <Icon
           icon={faTriangleExclamation}
-          className="h-10 w-10 text-amber-500"
+          className="h-10 w-10 text-error"
         />
-        <h2 className="text-xl font-semibold">Something went wrong</h2>
-        <p className="text-sm text-zinc-500">
+        <h2 className="text-headline-sm">Something went wrong</h2>
+        <p className="text-body-md text-on-surface-variant">
           An unexpected error occurred while loading this page.
         </p>
         <Button onClick={reset}>Try again</Button>

@@ -14,21 +14,21 @@ export function StatCard({ stat }: StatCardProps) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between">
-        <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-600/10">
+        <span className="grid h-10 w-10 place-items-center rounded-md bg-secondary-container text-primary">
           <Icon icon={stat.icon} className="h-5 w-5" />
         </span>
         <span
           className={cn(
-            "inline-flex items-center gap-1 text-sm font-medium",
-            isPositive ? "text-emerald-600" : "text-red-600",
+            "inline-flex items-center gap-1 text-body-md font-medium",
+            isPositive ? "text-success" : "text-error",
           )}
         >
           <Icon icon={isPositive ? faArrowUp : faArrowDown} className="h-3 w-3" />
           {Math.abs(stat.delta)}%
         </span>
       </div>
-      <p className="mt-4 text-2xl font-semibold tracking-tight">{stat.value}</p>
-      <p className="text-sm text-zinc-500">{stat.label}</p>
+      <p className="mt-4 text-headline-md">{stat.value}</p>
+      <p className="text-body-sm text-on-surface-variant">{stat.label}</p>
     </Card>
   );
 }

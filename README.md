@@ -22,7 +22,8 @@ testing workflow wired in from day one.
 | Framework          | **Next.js 16** (App Router, RSC, Turbopack)   | File-based routing, server components, route-level streaming/loading. |
 | Language           | **TypeScript 5** (strict)                     | Type safety across modules and public APIs. |
 | UI runtime         | **React 19**                                  | Server + client components. |
-| Styling            | **Tailwind CSS v4** (`@theme` tokens)         | Utility-first, themeable design tokens, zero runtime cost. |
+| Styling            | **Tailwind CSS v4** + **ErgoSoft design system** (M3 tokens) | Utility-first, themeable design tokens (`docs/DESIGN.md`), zero runtime cost. |
+| Typography         | **Inter** (`next/font`)                       | High legibility for data-dense ERP screens; the design system's chosen typeface. |
 | Icons              | **Font Awesome 7** (`react-fontawesome`)      | Tree-shakeable SVG icons via a single `Icon` wrapper. |
 | Animation          | **Motion** (`motion/react`)                   | Declarative, accessible interactivity (fade/stagger primitives). |
 | Class composition  | **clsx** + **tailwind-merge** (`cn()`)        | Conflict-free conditional class names. |
@@ -70,6 +71,40 @@ Open <http://localhost:3001> to view the app.
 | `pnpm test`            | Run the full test suite once.                      |
 | `pnpm test:watch`      | Run tests in watch mode while developing.          |
 | `pnpm test:coverage`   | Run tests and produce a coverage report.           |
+
+## Design system
+
+The UI implements the **ErgoSoft Systems** design system — a calm, data-dense,
+Material-3-based theme. The spec lives in [`docs/DESIGN.md`](docs/DESIGN.md) and
+is the source of truth for styling.
+
+It is wired into **Tailwind CSS v4** as theme tokens in
+[`src/app/globals.css`](src/app/globals.css), so components style themselves with
+semantic utilities instead of raw colors:
+
+| Category    | Examples |
+| ----------- | -------- |
+| Surfaces    | `bg-surface`, `bg-surface-container-lowest`, `bg-surface-container-high` |
+| Content     | `text-on-surface`, `text-on-surface-variant` |
+| Brand       | `bg-primary` / `text-on-primary`, `bg-secondary-container` / `text-on-secondary-container` |
+| Semantics   | `text-error`, `text-success` (success is derived — see below) |
+| Outlines    | `border-outline`, `border-outline-variant` |
+| Typography  | `text-headline-lg`, `text-headline-md`, `text-body-md`, `text-label-md` |
+| Radius      | `rounded-md` (8px, buttons/inputs), `rounded-lg`/`rounded-xl` (12–16px, cards) |
+
+**Use these tokens — never hard-coded colors** (`zinc-*`, `#hex`). Spacing already
+follows the design's 4px rule via Tailwind's default scale (`p-1`=4px … `p-8`=32px).
+
+Both light ([`docs/DESIGN.md`](docs/DESIGN.md)) and dark
+([`docs/DESIGN.dark.md`](docs/DESIGN.dark.md)) are published specs; their colors
+flip automatically via `prefers-color-scheme`.
+
+> **Notes beyond the published specs:**
+> - **One shared type/spacing scale.** The two specs define slightly different
+>   typography/spacing; by decision we use a single (light) scale for both modes,
+>   since Tailwind type/spacing tokens are global and the deltas are minor.
+> - **Success color** — added (`--color-success` family) for positive states
+>   (e.g. KPI deltas); neither spec defines one. Matches the desaturated tone.
 
 ## Backend / API
 
@@ -138,7 +173,8 @@ src/
 └─ test/                     # Test setup (jest-dom, cleanup)
 ```
 
-The `@/*` path alias maps to `src/*`.
+The `@/*` path alias maps to `src/*`. Project docs live in `docs/`
+([`docs/DESIGN.md`](docs/DESIGN.md) — the design system).
 
 ## Architectural decisions & assumptions
 

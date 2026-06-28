@@ -6,14 +6,15 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
 
 const variantStyles: Record<Variant, string> = {
-  primary:
-    "bg-brand-600 text-white hover:bg-brand-700 focus-visible:outline-brand-600",
+  // Solid fill for primary actions.
+  primary: "bg-primary text-on-primary hover:bg-primary-container",
+  // Tonal secondary action.
   secondary:
-    "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700 focus-visible:outline-zinc-400",
+    "bg-secondary-container text-on-secondary-container hover:brightness-95",
+  // "Ghost" — outline only, per the design's secondary-action guidance.
   ghost:
-    "bg-transparent text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 focus-visible:outline-zinc-400",
-  danger:
-    "bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600",
+    "border border-outline-variant bg-transparent text-on-surface hover:bg-surface-container",
+  danger: "bg-error text-on-error hover:brightness-110",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -58,8 +59,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         aria-busy={isLoading}
         className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors",
-          "focus-visible:outline-2 focus-visible:outline-offset-2",
+          "inline-flex items-center justify-center rounded-md font-medium transition-colors",
+          // Focus = the only high-contrast depth element: 2px primary ring, 2px offset.
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           "disabled:cursor-not-allowed disabled:opacity-60",
           variantStyles[variant],
           sizeStyles[size],

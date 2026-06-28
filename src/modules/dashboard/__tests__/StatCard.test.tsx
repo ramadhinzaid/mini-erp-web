@@ -19,15 +19,15 @@ describe("StatCard", () => {
     expect(screen.getByText("Customers")).toBeInTheDocument();
   });
 
-  it("shows a positive delta in green", () => {
+  it("shows a positive delta with the success color", () => {
     render(<StatCard stat={baseStat} />);
     const delta = screen.getByText("6.7%");
-    expect(delta).toHaveClass("text-emerald-600");
+    expect(delta).toHaveClass("text-success");
   });
 
-  it("shows a negative delta in red as an absolute value", () => {
+  it("shows a negative delta with the error color as an absolute value", () => {
     render(<StatCard stat={{ ...baseStat, delta: -2.3 }} />);
     const delta = screen.getByText("2.3%");
-    expect(delta).toHaveClass("text-red-600");
+    expect(delta).toHaveClass("text-error");
   });
 });

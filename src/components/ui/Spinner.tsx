@@ -26,7 +26,7 @@ export function Spinner({ size = "md", label = "Loading", className }: SpinnerPr
     <span role="status" aria-live="polite" className="inline-flex items-center">
       <span
         className={cn(
-          "animate-spin rounded-full border-current border-t-transparent text-brand-600",
+          "animate-spin rounded-full border-current border-t-transparent text-primary",
           sizeMap[size],
           className,
         )}

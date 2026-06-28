@@ -10,8 +10,8 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-zinc-200 bg-white shadow-sm",
-        "dark:border-zinc-800 dark:bg-zinc-900",
+        // Level 1: surface container with a subtle 1px outline, no shadow.
+        "rounded-xl border border-outline-variant bg-surface-container-lowest",
         className,
       )}
       {...props}
@@ -30,7 +30,7 @@ function CardBody({ className, ...props }: CardProps) {
 function CardFooter({ className, ...props }: CardProps) {
   return (
     <div
-      className={cn("border-t border-zinc-100 p-5 dark:border-zinc-800", className)}
+      className={cn("border-t border-outline-variant p-5", className)}
       {...props}
     />
   );

@@ -13,7 +13,7 @@ export type IconProps = FontAwesomeIconProps;
  *
  * @example
  * import { faUsers } from "@/lib/icons";
- * <Icon icon={faUsers} className="text-brand-600" />
+ * <Icon icon={faUsers} className="text-primary" />
  */
 export function Icon({ className, ...props }: IconProps) {
   return <FontAwesomeIcon className={cn(className)} {...props} />;

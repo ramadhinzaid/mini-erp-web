@@ -20,7 +20,7 @@ export function Skeleton({ circle = false, className, ...props }: SkeletonProps)
     <div
       aria-hidden="true"
       className={cn(
-        "animate-pulse bg-zinc-200 dark:bg-zinc-800",
+        "animate-pulse bg-surface-container-high",
         circle ? "rounded-full" : "rounded-md",
         className,
       )}

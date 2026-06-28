@@ -34,6 +34,30 @@ This repo is the **frontend**. The backend is a **separate NestJS service** at
 - Module `services/` may return mocked data until an endpoint exists, but must
   keep a signature compatible with the API client so swapping in is a one-liner.
 
+## Design system (must respect)
+
+The UI follows the **ErgoSoft** design system — spec in
+[`docs/DESIGN.md`](docs/DESIGN.md), wired into Tailwind as tokens in
+`src/app/globals.css`.
+
+- **Style with semantic tokens, never raw colors.** Use `bg-surface`,
+  `text-on-surface`, `bg-primary`/`text-on-primary`, `bg-secondary-container`,
+  `border-outline-variant`, `text-error`, `text-success`, etc. Do **not** use
+  `zinc-*`, `slate-*`, or hard-coded `#hex` in components.
+- **Typography:** use the type-scale utilities (`text-headline-lg`,
+  `text-headline-md`, `text-headline-sm`, `text-body-lg/md/sm`, `text-label-md`)
+  rather than ad-hoc `text-2xl font-semibold` combinations.
+- **Radius:** `rounded-md` (8px) for buttons/inputs; `rounded-lg`/`rounded-xl`
+  (12–16px) for cards. **Spacing:** multiples of 4px (Tailwind's default scale).
+- **Dark mode** flips automatically via tokens — write the light style with
+  semantic tokens and dark mode follows; do not add `dark:` color overrides.
+  Both light (`docs/DESIGN.md`) and dark (`docs/DESIGN.dark.md`) are published
+  specs.
+- **One shared type/spacing scale** for both modes (by decision) — don't add
+  color-scheme-specific font sizes/weights.
+- `success` colors are derived (neither spec defines one); keep them consistent
+  with the existing token values if you extend them.
+
 ## Architecture (must respect)
 
 - **`src/app/` is a thin routing layer.** Routes wire data → views only. No

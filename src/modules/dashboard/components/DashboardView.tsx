@@ -18,8 +18,8 @@ export function DashboardView({ stats }: DashboardViewProps) {
     <div className="space-y-6">
       <FadeIn>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-headline-lg">Dashboard</h1>
+          <p className="text-body-md text-on-surface-variant">
             Overview of your business at a glance.
           </p>
         </div>
@@ -35,12 +35,12 @@ export function DashboardView({ stats }: DashboardViewProps) {
 
       <FadeIn delay={0.1}>
         <Card className="p-5">
-          <h2 className="text-lg font-semibold">Activity</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h2 className="text-headline-sm">Activity</h2>
+          <p className="mt-1 text-body-md text-on-surface-variant">
             Plug a chart library in here — this card is a placeholder for the
             next feature slice.
           </p>
-          <div className="mt-4 grid h-48 place-items-center rounded-lg border border-dashed border-zinc-200 text-sm text-zinc-400 dark:border-zinc-800">
+          <div className="mt-4 grid h-48 place-items-center rounded-lg border border-dashed border-outline-variant text-body-md text-on-surface-variant">
             Chart goes here
           </div>
         </Card>

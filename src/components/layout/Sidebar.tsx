@@ -36,17 +36,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 border-r border-zinc-200 bg-white p-4",
-          "transition-transform duration-200 ease-out dark:border-zinc-800 dark:bg-zinc-900",
+          "fixed inset-y-0 left-0 z-40 w-64 border-r border-outline-variant bg-surface-container-lowest p-4",
+          "transition-transform duration-200 ease-out",
           "lg:static lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="mb-6 flex items-center gap-2 px-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 font-bold text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-md bg-primary font-bold text-on-primary">
             E
           </span>
-          <span className="text-lg font-semibold">{siteConfig.name}</span>
+          <span className="text-headline-sm">{siteConfig.name}</span>
         </div>
 
         <nav aria-label="Primary" className="flex flex-col gap-1">
@@ -62,10 +62,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 onClick={onClose}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  // "Soft" highlight: 8px rounded background on active/hover.
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-body-md font-medium transition-colors",
                   isActive
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-600/10 dark:text-brand-400"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
+                    ? "bg-secondary-container text-on-secondary-container"
+                    : "text-on-surface-variant hover:bg-surface-container",
                 )}
               >
                 <Icon icon={item.icon} className="h-4 w-4" />

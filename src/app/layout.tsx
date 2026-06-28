@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 
 // Import Font Awesome's stylesheet once, app-wide. `config.autoAddCss = false`
 // (set in @/lib/icons) prevents the duplicate, layout-shifting auto-injection.
@@ -10,13 +10,9 @@ import "./globals.css";
 import { AppShell } from "@/components/layout";
 import { siteConfig } from "@/config/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// ErgoSoft design system specifies Inter for its legibility in data-heavy UIs.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -34,11 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-dvh">
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-dvh bg-background text-on-background">
         <AppShell>{children}</AppShell>
       </body>
     </html>
