@@ -147,6 +147,7 @@ src/
 │  ├─ layout.tsx             # Root layout: fonts, Font Awesome, AppShell
 │  ├─ page.tsx               # Dashboard route (fetches via module service)
 │  ├─ loading.tsx            # Route-level Suspense fallback (skeleton)
+│  ├─ customers/             # Customers route (page + loading skeleton)
 │  ├─ error.tsx              # Segment error boundary
 │  └─ not-found.tsx          # 404 page
 │
@@ -156,12 +157,13 @@ src/
 │  └─ layout/                # App chrome: AppShell, Header, Sidebar, Footer
 │
 ├─ modules/                  # Self-contained feature slices (micro-frontend ready)
-│  └─ dashboard/             # Example module — see src/modules/README.md
-│     ├─ components/         #   feature UI
-│     ├─ services/           #   data access / business logic
-│     ├─ types/              #   feature-owned types
-│     ├─ __tests__/          #   co-located tests
-│     └─ index.ts            #   PUBLIC API (the only allowed import path)
+│  ├─ dashboard/             # Example module — see src/modules/README.md
+│  │  ├─ components/         #   feature UI
+│  │  ├─ services/           #   data access / business logic
+│  │  ├─ types/              #   feature-owned types
+│  │  ├─ __tests__/          #   co-located tests
+│  │  └─ index.ts            #   PUBLIC API (the only allowed import path)
+│  └─ customers/             # Customers CRUD module (list/create/edit/delete)
 │
 ├─ config/                   # App config: site metadata, navigation, env
 ├─ hooks/                    # Shared React hooks (e.g. useMediaQuery)
@@ -175,6 +177,41 @@ src/
 
 The `@/*` path alias maps to `src/*`. Project docs live in `docs/`
 ([`docs/DESIGN.md`](docs/DESIGN.md) — the design system).
+
+## Feature modules
+
+### Customers (`src/modules/customers`)
+
+Manage the customer directory at the **`/customers`** route. The module follows
+the standard anatomy (`components/`, `services/`, `types/`, `__tests__/`,
+`index.ts`) and exposes everything a host needs through its `index.ts` barrel —
+never deep-import its internals.
+
+- **Route** — `src/app/customers/page.tsx` is thin: it renders `CustomersView`
+  from the module. `src/app/customers/loading.tsx` streams `CustomersSkeleton`
+  as the Suspense fallback. Both render inside the authenticated `AppShell`.
+- **View** — `CustomersView` (client) lists customers in a searchable, paginated
+  table with **New customer**, **Edit**, and **Delete** actions. Delete asks for
+  confirmation in a dialog, then refreshes the list and shows a `text-success`
+  confirmation; load/save failures surface as `text-error` messages.
+- **Form** — `CustomerForm` (client) handles create and edit with inline
+  validation (required name, email format), a `Spinner` while submitting, and
+  `ApiError` messages without losing input.
+- **Service** — `customers.service.ts` wraps the Customers REST resource through
+  the typed `@/lib/api` client and unwraps the backend's `{ success, data }`
+  envelope:
+
+  | Function | HTTP call |
+  | --- | --- |
+  | `listCustomers({ page, search, limit, token })` | `GET /customers?page=&limit=&search=` |
+  | `getCustomer(id, token)` | `GET /customers/:id` |
+  | `createCustomer(input, token)` | `POST /customers` |
+  | `updateCustomer(id, input, token)` | `PATCH /customers/:id` |
+  | `deleteCustomer(id, token)` | `DELETE /customers/:id` |
+
+  Functions are token-based so they compose with the auth module once it lands.
+  Until then, `getStoredToken()` (`services/token.ts`) reads the persisted JWT
+  and callers pass it in — swapping in `useAuth().token` later is a one-liner.
 
 ## Architectural decisions & assumptions
 
