@@ -13,6 +13,7 @@ export { InvoiceForm } from "./components/InvoiceForm";
 export { InvoiceDetail } from "./components/InvoiceDetail";
 export { InvoicesSkeleton } from "./components/InvoicesSkeleton";
 export { InvoiceStatusBadge } from "./components/InvoiceStatusBadge";
+export { InvoiceStatusControl } from "./components/InvoiceStatusControl";
 export {
   createInvoice,
   getInvoice,
