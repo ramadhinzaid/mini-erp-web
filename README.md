@@ -139,13 +139,49 @@ pnpm start:dev          # http://localhost:3000/api
 pnpm dev                # http://localhost:3001
 ```
 
+## Authentication & route protection
+
+Auth is a self-contained feature module at `src/modules/auth/` — consume it only
+through its `index.ts`:
+
+```ts
+import { AuthProvider, useAuth, LoginForm } from "@/modules/auth";
+```
+
+- **`auth.service`** wraps the backend's JWT endpoints through `@/lib/api`:
+  - `login(credentials)` → `POST /auth/login`, unwraps the `{ success, data }`
+    envelope and returns `{ accessToken, refreshToken }`.
+  - `getCurrentUser(token)` → `GET /auth/me` with `Authorization: Bearer <token>`.
+  - Token-persistence helpers (`storeTokens` / `readAccessToken` /
+    `readRefreshToken` / `clearTokens`) keep the JWT pair in `localStorage`
+    under `mini-erp.accessToken` / `mini-erp.refreshToken`. All are guarded with
+    `typeof window` so they're SSR-safe.
+- **`AuthProvider`** (wraps the app in `src/app/layout.tsx`) exposes
+  `useAuth() → { user, login, logout, isLoading }`. On mount it hydrates the
+  user from a stored token via `getCurrentUser`; `logout` clears tokens and
+  redirects to `/login`.
+- **`LoginForm`** validates email/password inline, shows a `Spinner` while the
+  request is in flight, surfaces a friendly `text-error` message on a 401
+  (`ApiError`), and redirects to `/` on success.
+- **`/login`** is a public route (no shell/sidebar). Every other route is gated:
+  `AppShell` is auth-aware — it renders public routes bare, and for protected
+  routes shows a `Spinner` while auth resolves, redirecting unauthenticated
+  visitors to `/login`. Because tokens live in `localStorage`, the guard is
+  client-side. The `Header` surfaces the signed-in user's email and a **Logout**
+  action wired to `useAuth().logout`.
+
+> **Assumption:** the backend exposes `POST /auth/login` and `GET /auth/me` and
+> wraps responses as `{ success, data }`. Tokens are stored in `localStorage`
+> (no new env vars beyond `NEXT_PUBLIC_API_URL`).
+
 ## Project structure
 
 ```
 src/
 ├─ app/                      # Next.js App Router — routing layer ONLY (thin)
-│  ├─ layout.tsx             # Root layout: fonts, Font Awesome, AppShell
+│  ├─ layout.tsx             # Root layout: fonts, Font Awesome, AuthProvider, AppShell
 │  ├─ page.tsx               # Dashboard route (fetches via module service)
+│  ├─ login/page.tsx         # Public sign-in route (renders auth module's LoginForm)
 │  ├─ loading.tsx            # Route-level Suspense fallback (skeleton)
 │  ├─ customers/             # Customers route (page + loading skeleton)
 │  ├─ error.tsx              # Segment error boundary
@@ -157,6 +193,12 @@ src/
 │  └─ layout/                # App chrome: AppShell, Header, Sidebar, Footer
 │
 ├─ modules/                  # Self-contained feature slices (micro-frontend ready)
+│  ├─ auth/                  # Login, session context (useAuth), route protection
+│  │  ├─ components/         #   LoginForm, AuthProvider (useAuth)
+│  │  ├─ services/           #   auth.service: login/getCurrentUser + token storage
+│  │  ├─ types/              #   Credentials, AuthTokens, AuthUser
+│  │  ├─ __tests__/          #   LoginForm + auth.service tests
+│  │  └─ index.ts            #   PUBLIC API
 │  ├─ dashboard/             # Example module — see src/modules/README.md
 │  │  ├─ components/         #   feature UI
 │  │  ├─ services/           #   data access / business logic

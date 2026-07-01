@@ -8,6 +8,7 @@ import "@/lib/icons";
 import "./globals.css";
 
 import { AppShell } from "@/components/layout";
+import { AuthProvider } from "@/modules/auth";
 import { siteConfig } from "@/config/site";
 
 // ErgoSoft design system specifies Inter for its legibility in data-heavy UIs.
@@ -32,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-dvh bg-background text-on-background">
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );
