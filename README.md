@@ -278,10 +278,21 @@ parallel modules. Consume it only through its `index.ts`.
   inline, shows a `Spinner` while submitting, surfaces `ApiError` messages, and
   on success redirects to `/invoices/[id]`.
 - **Detail shell** — `InvoiceDetail` (client) loads an invoice via `getInvoice`
-  and renders the header (number, customer, `InvoiceStatusBadge`, total) plus a
-  read-only items summary. The status-controls and activity-timeline regions are
-  labelled slots the sibling plans fill in; load failures show a `text-error`
-  message.
+  and renders the header (number, customer, `InvoiceStatusBadge`, total) plus the
+  editable items table (see below). The status-controls and activity-timeline
+  regions are labelled slots the sibling plans fill in; load failures show a
+  `text-error` message.
+- **Items editor** — `InvoiceItemsEditor` (client) makes the detail page's items
+  section editable: it lists each line item (description, qty, unit price, line
+  total) with inline **Edit** and **Remove** controls and an **Add item** form.
+  Every mutation calls `addItem`/`updateItem`/`removeItem`, and the invoice they
+  return (with server-recomputed totals) is fed back to `InvoiceDetail` so the
+  header and footer totals (subtotal/tax/total) update live without a refetch.
+  Editing is only available while the invoice is `DRAFT`/`SENT`; other statuses
+  render the items read-only with an explanation, and a backend `409` surfaces as
+  a friendly `text-error` message. Pending actions show a `Spinner`, and
+  **Remove** asks for confirmation first. `canEditItems(status)` is exported for
+  reuse.
 - **Status badge** — `InvoiceStatusBadge` maps each status to a semantic token
   pair (`DRAFT`→neutral, `SENT`→secondary, `PAID`→success, `VOID`→error,
   `OVERDUE`→tertiary/warning), reused across the invoice surfaces.
