@@ -184,6 +184,7 @@ src/
 │  ├─ login/page.tsx         # Public sign-in route (renders auth module's LoginForm)
 │  ├─ loading.tsx            # Route-level Suspense fallback (skeleton)
 │  ├─ customers/             # Customers route (page + loading skeleton)
+│  ├─ invoices/              # Invoice create (new/) + detail ([id]/ + loading) routes
 │  ├─ error.tsx              # Segment error boundary
 │  └─ not-found.tsx          # 404 page
 │
@@ -205,7 +206,8 @@ src/
 │  │  ├─ types/              #   feature-owned types
 │  │  ├─ __tests__/          #   co-located tests
 │  │  └─ index.ts            #   PUBLIC API (the only allowed import path)
-│  └─ customers/             # Customers CRUD module (list/create/edit/delete)
+│  ├─ customers/             # Customers CRUD module (list/create/edit/delete)
+│  └─ invoices/              # Invoice domain foundation (create flow + detail shell)
 │
 ├─ config/                   # App config: site metadata, navigation, env
 ├─ hooks/                    # Shared React hooks (e.g. useMediaQuery)
@@ -254,6 +256,55 @@ never deep-import its internals.
   Functions are token-based so they compose with the auth module once it lands.
   Until then, `getStoredToken()` (`services/token.ts`) reads the persisted JWT
   and callers pass it in — swapping in `useAuth().token` later is a one-liner.
+
+### Invoices (`src/modules/invoices`)
+
+The **foundation** of the invoice domain — it scaffolds the module and the
+create flow, and lays down the shared surface (types, service, detail shell)
+that the other invoice features build on. Sibling plans (**add-items**,
+**update-status**, activity **history**, and the `/invoices` **list**) extend
+this module, its `index.ts` barrel, and the detail page rather than adding
+parallel modules. Consume it only through its `index.ts`.
+
+- **Routes** — `src/app/invoices/new/page.tsx` renders `InvoiceForm` (create);
+  `src/app/invoices/[id]/page.tsx` renders the `InvoiceDetail` shell, with
+  `src/app/invoices/[id]/loading.tsx` streaming `InvoicesSkeleton`. Both render
+  inside the authenticated `AppShell`. The `/invoices` **list** route is owned by
+  the history plan and is not created here.
+- **Form** — `InvoiceForm` (client) picks a customer (fetched through the
+  Customers module's public API), collects issue/due dates, an optional tax rate
+  and notes, and edits inline line items with a **live** client-side
+  subtotal/tax/total preview mirroring the server's arithmetic. It validates
+  inline, shows a `Spinner` while submitting, surfaces `ApiError` messages, and
+  on success redirects to `/invoices/[id]`.
+- **Detail shell** — `InvoiceDetail` (client) loads an invoice via `getInvoice`
+  and renders the header (number, customer, `InvoiceStatusBadge`, total) plus a
+  read-only items summary. The status-controls and activity-timeline regions are
+  labelled slots the sibling plans fill in; load failures show a `text-error`
+  message.
+- **Status badge** — `InvoiceStatusBadge` maps each status to a semantic token
+  pair (`DRAFT`→neutral, `SENT`→secondary, `PAID`→success, `VOID`→error,
+  `OVERDUE`→tertiary/warning), reused across the invoice surfaces.
+- **Service** — `invoices.service.ts` wraps the Invoices REST resource through
+  the typed `@/lib/api` client and unwraps the `{ success, data }` envelope. It
+  also exports `formatMoney` (formats `Decimal` money) and `computeTotals`
+  (client-side preview math):
+
+  | Function | HTTP call | Plan |
+  | --- | --- | --- |
+  | `createInvoice(input, token)` | `POST /invoices` | foundation |
+  | `getInvoice(id, token)` | `GET /invoices/:id` | foundation |
+  | `listInvoices({ page, limit, status, customerId, token })` | `GET /invoices?…` | history |
+  | `addItem(invoiceId, item, token)` | `POST /invoices/:id/items` | add-items |
+  | `updateItem(invoiceId, itemId, patch, token)` | `PATCH /invoices/:id/items/:itemId` | add-items |
+  | `removeItem(invoiceId, itemId, token)` | `DELETE /invoices/:id/items/:itemId` | add-items |
+  | `updateStatus(invoiceId, status, token)` | `PATCH /invoices/:id/status` | update-status |
+  | `getInvoiceEvents(invoiceId, token)` | `GET /invoices/:id/events` | history |
+
+  Money fields are `Decimal` on the backend and arrive as strings; treat them as
+  `string | number` and format for display with `formatMoney`. Functions are
+  token-based (via `getStoredToken()` today, `useAuth()` later), matching the
+  Customers module.
 
 ## Architectural decisions & assumptions
 
