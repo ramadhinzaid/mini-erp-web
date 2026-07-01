@@ -63,7 +63,28 @@ export interface Invoice {
   createdAt: string;
 }
 
-/** A single entry in an invoice's activity timeline. */
+/**
+ * Structured metadata attached to an {@link InvoiceEvent}, when the audit trail
+ * records more than a free-text message. All fields are optional — the timeline
+ * degrades to `message` when they are absent.
+ */
+export interface InvoiceEventData {
+  /** Previous value for a `STATUS_CHANGED` transition. */
+  from?: string;
+  /** New value for a `STATUS_CHANGED` transition. */
+  to?: string;
+  /** Description of the affected line item for `ITEM_*` events. */
+  description?: string;
+  /** Escape hatch for any extra fields the backend attaches. */
+  [key: string]: unknown;
+}
+
+/**
+ * A single entry in an invoice's activity timeline, sourced from the backend
+ * audit trail (`GET /invoices/:id/events`). Kinds include `CREATED`,
+ * `STATUS_CHANGED` (with `data.from`/`data.to`), and `ITEM_ADDED` /
+ * `ITEM_UPDATED` / `ITEM_REMOVED`.
+ */
 export interface InvoiceEvent {
   id: string;
   invoiceId: string;
@@ -73,6 +94,10 @@ export interface InvoiceEvent {
   message: string;
   /** ISO-8601 timestamp of the event. */
   createdAt: string;
+  /** Who performed the action, when the audit trail records an actor. */
+  actor?: string;
+  /** Structured metadata (status transition, affected item, …). */
+  data?: InvoiceEventData;
 }
 
 /** Payload for a single line item when creating/updating an invoice. */

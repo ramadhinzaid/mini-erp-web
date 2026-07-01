@@ -184,7 +184,7 @@ src/
 │  ├─ login/page.tsx         # Public sign-in route (renders auth module's LoginForm)
 │  ├─ loading.tsx            # Route-level Suspense fallback (skeleton)
 │  ├─ customers/             # Customers route (page + loading skeleton)
-│  ├─ invoices/              # Invoice create (new/) + detail ([id]/ + loading) routes
+│  ├─ invoices/              # Invoice list (page + loading), create (new/), detail ([id]/)
 │  ├─ error.tsx              # Segment error boundary
 │  └─ not-found.tsx          # 404 page
 │
@@ -207,7 +207,7 @@ src/
 │  │  ├─ __tests__/          #   co-located tests
 │  │  └─ index.ts            #   PUBLIC API (the only allowed import path)
 │  ├─ customers/             # Customers CRUD module (list/create/edit/delete)
-│  └─ invoices/              # Invoice domain foundation (create flow + detail shell)
+│  └─ invoices/              # Invoice domain (create, list/history, detail + activity timeline)
 │
 ├─ config/                   # App config: site metadata, navigation, env
 ├─ hooks/                    # Shared React hooks (e.g. useMediaQuery)
@@ -266,11 +266,18 @@ that the other invoice features build on. Sibling plans (**add-items**,
 this module, its `index.ts` barrel, and the detail page rather than adding
 parallel modules. Consume it only through its `index.ts`.
 
-- **Routes** — `src/app/invoices/new/page.tsx` renders `InvoiceForm` (create);
+- **Routes** — `src/app/invoices/page.tsx` renders the `InvoicesView` **list**
+  (with `src/app/invoices/loading.tsx` streaming `InvoicesListSkeleton`);
+  `src/app/invoices/new/page.tsx` renders `InvoiceForm` (create);
   `src/app/invoices/[id]/page.tsx` renders the `InvoiceDetail` shell, with
-  `src/app/invoices/[id]/loading.tsx` streaming `InvoicesSkeleton`. Both render
-  inside the authenticated `AppShell`. The `/invoices` **list** route is owned by
-  the history plan and is not created here.
+  `src/app/invoices/[id]/loading.tsx` streaming `InvoicesSkeleton`. All render
+  inside the authenticated `AppShell`.
+- **List (`/invoices`)** — `InvoicesView` (client) browses invoice history in a
+  paginated table (number, customer, issue/due date, total, status badge) with
+  filters for status, customer, a free-text search, and an issue-date range, plus
+  a **New invoice** button. Each row's number links to `/invoices/[id]`. The
+  status badge derives **`OVERDUE`** on the client for a `SENT` invoice whose due
+  date has passed (`deriveInvoiceStatus`). Empty and `text-error` states included.
 - **Form** — `InvoiceForm` (client) picks a customer (fetched through the
   Customers module's public API), collects issue/due dates, an optional tax rate
   and notes, and edits inline line items with a **live** client-side
@@ -278,10 +285,17 @@ parallel modules. Consume it only through its `index.ts`.
   inline, shows a `Spinner` while submitting, surfaces `ApiError` messages, and
   on success redirects to `/invoices/[id]`.
 - **Detail shell** — `InvoiceDetail` (client) loads an invoice via `getInvoice`
-  and renders the header (number, customer, `InvoiceStatusBadge`, total) plus a
-  read-only items summary. The status-controls and activity-timeline regions are
-  labelled slots the sibling plans fill in; load failures show a `text-error`
-  message.
+  and renders the header (number, customer, `InvoiceStatusBadge`, total), a
+  read-only items summary, and the **activity timeline**. The status-controls
+  region is a labelled slot the update-status plan fills in; load failures show a
+  `text-error` message.
+- **Activity timeline** — `InvoiceActivityTimeline` (client), mounted in the
+  detail page's Activity section, fetches the audit trail via `getInvoiceEvents`
+  and renders it as an ordered, oldest-first list (`CREATED` first). Each entry
+  shows a curated title — `STATUS_CHANGED` renders `from → to`, `ITEM_ADDED` /
+  `ITEM_UPDATED` / `ITEM_REMOVED` the affected item — with its timestamp and the
+  acting user when present. Uses `Skeleton` while loading and `text-error` on
+  failure.
 - **Status badge** — `InvoiceStatusBadge` maps each status to a semantic token
   pair (`DRAFT`→neutral, `SENT`→secondary, `PAID`→success, `VOID`→error,
   `OVERDUE`→tertiary/warning), reused across the invoice surfaces.
@@ -294,7 +308,7 @@ parallel modules. Consume it only through its `index.ts`.
   | --- | --- | --- |
   | `createInvoice(input, token)` | `POST /invoices` | foundation |
   | `getInvoice(id, token)` | `GET /invoices/:id` | foundation |
-  | `listInvoices({ page, limit, status, customerId, token })` | `GET /invoices?…` | history |
+  | `listInvoices({ page, limit, status, customerId, search, issuedFrom, issuedTo, token })` | `GET /invoices?…` | history |
   | `addItem(invoiceId, item, token)` | `POST /invoices/:id/items` | add-items |
   | `updateItem(invoiceId, itemId, patch, token)` | `PATCH /invoices/:id/items/:itemId` | add-items |
   | `removeItem(invoiceId, itemId, token)` | `DELETE /invoices/:id/items/:itemId` | add-items |
