@@ -1,12 +1,13 @@
-import { DashboardView, getDashboardStats } from "@/modules/dashboard";
+import { DashboardView } from "@/modules/dashboard";
 
 /**
- * Dashboard route (Server Component).
+ * Dashboard route.
  *
- * Thin by design: it fetches via the module's service and hands data to the
- * module's view. While the async work runs, Next renders `loading.tsx`.
+ * Thin by design: it renders the module's view, which owns its own client-side
+ * data fetching (the authenticated `GET /dashboard/summary`) plus its loading
+ * and error states. The surrounding authenticated `AppShell` is provided by the
+ * root layout.
  */
-export default async function HomePage() {
-  const stats = await getDashboardStats();
-  return <DashboardView stats={stats} />;
+export default function HomePage() {
+  return <DashboardView />;
 }
