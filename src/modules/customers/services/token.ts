@@ -8,8 +8,12 @@
  * service signatures.
  */
 
-/** localStorage key the auth module persists the JWT under. */
-export const TOKEN_STORAGE_KEY = "mini-erp.token";
+/**
+ * localStorage key the auth module persists the access token under
+ * (see `auth.service.ts` → `ACCESS_TOKEN_KEY`). Must stay in sync with it, or
+ * requests go out without a Bearer token and the API answers `401 Unauthorized`.
+ */
+export const ACCESS_TOKEN_KEY = "mini-erp.accessToken";
 
 /**
  * Reads the persisted Bearer token, or `undefined` when none is stored or when
@@ -19,7 +23,7 @@ export const TOKEN_STORAGE_KEY = "mini-erp.token";
 export function getStoredToken(): string | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    return window.localStorage.getItem(TOKEN_STORAGE_KEY) ?? undefined;
+    return window.localStorage.getItem(ACCESS_TOKEN_KEY) ?? undefined;
   } catch {
     return undefined;
   }
