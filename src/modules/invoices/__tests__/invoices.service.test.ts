@@ -4,13 +4,16 @@ import {
   createInvoice,
   getInvoice,
   updateStatus,
+  listInvoices,
+  getInvoiceEvents,
+  deriveInvoiceStatus,
   addItem,
   updateItem,
   removeItem,
   formatMoney,
   computeTotals,
 } from "../services/invoices.service";
-import type { Invoice, InvoiceInput } from "../types";
+import type { Invoice, InvoiceEvent, InvoiceInput } from "../types";
 
 // Mock the typed client so we can assert exactly which verb/path each service
 // function hits, and confirm the `{ success, data }` envelope is unwrapped.
@@ -94,6 +97,95 @@ describe("updateStatus", () => {
       { token: "jwt-1" },
     );
     expect(data).toEqual(sent);
+  });
+});
+
+describe("listInvoices", () => {
+  it("GETs the paginated path with all filters and unwraps data", async () => {
+    const result = { items: [invoice], total: 1, page: 2, limit: 10 };
+    vi.mocked(api.get).mockResolvedValue(envelope(result));
+
+    const data = await listInvoices({
+      page: 2,
+      status: "SENT",
+      customerId: "c1",
+      search: "  acme ",
+      issuedFrom: "2026-01-01",
+      issuedTo: "2026-12-31",
+      token: "jwt-1",
+    });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/invoices?page=2&limit=10&status=SENT&customerId=c1&search=acme&issuedFrom=2026-01-01&issuedTo=2026-12-31",
+      { token: "jwt-1" },
+    );
+    expect(data).toEqual(result);
+  });
+
+  it("defaults to page 1 / limit 10 and omits empty filters", async () => {
+    vi.mocked(api.get).mockResolvedValue(
+      envelope({ items: [], total: 0, page: 1, limit: 10 }),
+    );
+
+    await listInvoices();
+
+    expect(api.get).toHaveBeenCalledWith("/invoices?page=1&limit=10", {
+      token: undefined,
+    });
+  });
+});
+
+describe("getInvoiceEvents", () => {
+  it("GETs /invoices/:id/events and unwraps the event array", async () => {
+    const events: InvoiceEvent[] = [
+      {
+        id: "e1",
+        invoiceId: "inv1",
+        type: "CREATED",
+        message: "Invoice created",
+        createdAt: "2026-07-01T00:00:00.000Z",
+      },
+    ];
+    vi.mocked(api.get).mockResolvedValue(envelope(events));
+
+    const data = await getInvoiceEvents("inv1", "jwt-1");
+
+    expect(api.get).toHaveBeenCalledWith("/invoices/inv1/events", {
+      token: "jwt-1",
+    });
+    expect(data).toEqual(events);
+  });
+});
+
+describe("deriveInvoiceStatus", () => {
+  const now = new Date("2026-07-10T00:00:00.000Z");
+
+  it("derives OVERDUE for a SENT invoice past its due date", () => {
+    expect(
+      deriveInvoiceStatus({ status: "SENT", dueDate: "2026-07-01" }, now),
+    ).toBe("OVERDUE");
+  });
+
+  it("keeps SENT when the due date has not passed", () => {
+    expect(
+      deriveInvoiceStatus({ status: "SENT", dueDate: "2026-07-31" }, now),
+    ).toBe("SENT");
+  });
+
+  it("keeps SENT when there is no due date", () => {
+    expect(deriveInvoiceStatus({ status: "SENT" }, now)).toBe("SENT");
+  });
+
+  it("never overrides terminal or non-SENT statuses", () => {
+    expect(
+      deriveInvoiceStatus({ status: "PAID", dueDate: "2026-07-01" }, now),
+    ).toBe("PAID");
+    expect(
+      deriveInvoiceStatus({ status: "DRAFT", dueDate: "2026-07-01" }, now),
+    ).toBe("DRAFT");
+    expect(
+      deriveInvoiceStatus({ status: "VOID", dueDate: "2026-07-01" }, now),
+    ).toBe("VOID");
   });
 });
 

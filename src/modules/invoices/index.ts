@@ -11,12 +11,15 @@
  */
 export { InvoiceForm } from "./components/InvoiceForm";
 export { InvoiceDetail } from "./components/InvoiceDetail";
+export { InvoicesView } from "./components/InvoicesView";
+export { InvoiceActivityTimeline } from "./components/InvoiceActivityTimeline";
 export {
   InvoiceItemsEditor,
   canEditItems,
   type InvoiceItemsEditorProps,
 } from "./components/InvoiceItemsEditor";
 export { InvoicesSkeleton } from "./components/InvoicesSkeleton";
+export { InvoicesListSkeleton } from "./components/InvoicesListSkeleton";
 export { InvoiceStatusBadge } from "./components/InvoiceStatusBadge";
 export { InvoiceStatusControl } from "./components/InvoiceStatusControl";
 export {
@@ -30,6 +33,7 @@ export {
   getInvoiceEvents,
   formatMoney,
   computeTotals,
+  deriveInvoiceStatus,
   type InvoiceListParams,
   type InvoiceListResult,
 } from "./services/invoices.service";
@@ -38,6 +42,7 @@ export type {
   InvoiceItem,
   InvoiceStatus,
   InvoiceEvent,
+  InvoiceEventData,
   InvoiceInput,
   InvoiceItemInput,
   Money,
