@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, setAuthRefreshHandler } from "@/lib/api";
 import type { AuthTokens, AuthUser, Credentials } from "../types";
 
 /**
@@ -68,4 +68,55 @@ export function clearTokens(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+/**
+ * Exchange the stored refresh token for a fresh pair via `POST /auth/refresh`
+ * and persist it. `skipAuthRefresh` keeps a 401 here from recursing into the
+ * silent-refresh retry. Throws when no refresh token is stored.
+ */
+export async function refresh(): Promise<AuthTokens> {
+  const refreshToken = readRefreshToken();
+  if (!refreshToken) {
+    throw new Error("No refresh token stored");
+  }
+  const response = await api.post<ApiEnvelope<AuthTokens>>(
+    "/auth/refresh",
+    { refreshToken },
+    { skipAuthRefresh: true },
+  );
+  storeTokens(response.data);
+  return response.data;
+}
+
+/** In-flight refresh, so concurrent 401s trigger a single token exchange. */
+let refreshInFlight: Promise<string | null> | null = null;
+
+/**
+ * Silent-refresh handler wired into the API client (see {@link installAuthRefresh}).
+ * Deduped so a burst of 401s refreshes once; resolves to the new access token,
+ * or `null` after clearing the stored pair when refresh is impossible.
+ */
+export function handleAuthRefresh(): Promise<string | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = refresh()
+      .then((tokens) => tokens.accessToken)
+      .catch(() => {
+        clearTokens();
+        return null;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+/**
+ * Register {@link handleAuthRefresh} with the API client so any authenticated
+ * request that 401s transparently refreshes and retries once. Call once at app
+ * startup (the AuthProvider does this on import).
+ */
+export function installAuthRefresh(): void {
+  setAuthRefreshHandler(handleAuthRefresh);
 }

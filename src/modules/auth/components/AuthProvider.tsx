@@ -13,6 +13,7 @@ import type { AuthUser, Credentials } from "../types";
 import {
   clearTokens,
   getCurrentUser,
+  installAuthRefresh,
   login as loginRequest,
   readAccessToken,
   storeTokens,
@@ -49,6 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // body) so a missing token doesn't trigger a cascading synchronous render.
   useEffect(() => {
     let active = true;
+
+    // Wire silent-refresh-on-401 into the API client. Registering here (not at
+    // module load) avoids import-order cycles; it still lands well before any
+    // 401 can return, since that requires a network round trip.
+    installAuthRefresh();
 
     (async () => {
       const token = readAccessToken();

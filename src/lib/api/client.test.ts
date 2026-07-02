@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { api, apiFetch, ApiError } from "./client";
+import { api, apiFetch, ApiError, setAuthRefreshHandler } from "./client";
 
 const API_BASE = "http://localhost:3000/api";
 
@@ -19,6 +19,7 @@ describe("apiFetch", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    setAuthRefreshHandler(null);
   });
 
   it("prefixes the configured base URL and returns parsed JSON", async () => {
@@ -68,5 +69,59 @@ describe("apiFetch", () => {
       new Response(null, { status: 204 }),
     );
     await expect(api.delete("/users/1")).resolves.toBeUndefined();
+  });
+
+  describe("silent refresh on 401", () => {
+    it("refreshes and retries once with the new token, then returns the retry body", async () => {
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(mockResponse({ message: "jwt expired" }, { status: 401 }))
+        .mockResolvedValueOnce(mockResponse({ ok: true }));
+      const handler = vi.fn().mockResolvedValue("fresh-token");
+      setAuthRefreshHandler(handler);
+
+      const data = await apiFetch<{ ok: boolean }>("/secret", { token: "stale" });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
+      const [, retryInit] = vi.mocked(fetch).mock.calls[1];
+      expect(retryInit?.headers).toMatchObject({ Authorization: "Bearer fresh-token" });
+      expect(data).toEqual({ ok: true });
+    });
+
+    it("throws the original 401 when the handler cannot refresh", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        mockResponse({ message: "Unauthorized" }, { status: 401 }),
+      );
+      setAuthRefreshHandler(vi.fn().mockResolvedValue(null));
+
+      await expect(apiFetch("/secret", { token: "stale" })).rejects.toMatchObject({
+        status: 401,
+      });
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not refresh the refresh call itself (skipAuthRefresh)", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        mockResponse({ message: "Unauthorized" }, { status: 401 }),
+      );
+      const handler = vi.fn();
+      setAuthRefreshHandler(handler);
+
+      await expect(
+        apiFetch("/auth/refresh", { token: "stale", skipAuthRefresh: true }),
+      ).rejects.toBeInstanceOf(ApiError);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("does not refresh an unauthenticated request (no token)", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        mockResponse({ message: "Unauthorized" }, { status: 401 }),
+      );
+      const handler = vi.fn();
+      setAuthRefreshHandler(handler);
+
+      await expect(apiFetch("/public")).rejects.toBeInstanceOf(ApiError);
+      expect(handler).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,1 +1,8 @@
-export { api, apiFetch, ApiError, type RequestOptions } from "./client";
+export {
+  api,
+  apiFetch,
+  ApiError,
+  setAuthRefreshHandler,
+  type RequestOptions,
+  type AuthRefreshHandler,
+} from "./client";

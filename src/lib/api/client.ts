@@ -19,6 +19,30 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Bearer token for authenticated requests (NestJS JWT auth). */
   token?: string;
+  /**
+   * Skip the silent-refresh-on-401 retry for this request. Set on the refresh
+   * call itself (and the login/register calls) so a 401 there can't recurse.
+   */
+  skipAuthRefresh?: boolean;
+}
+
+/**
+ * Exchanges an expired session for a fresh access token. Returns the new access
+ * token to retry with, or `null` when refresh is impossible (no/expired refresh
+ * token). Registered by the auth module via {@link setAuthRefreshHandler} — the
+ * client stays decoupled from it to avoid an import cycle.
+ */
+export type AuthRefreshHandler = () => Promise<string | null>;
+
+let authRefreshHandler: AuthRefreshHandler | null = null;
+
+/**
+ * Register (or clear, with `null`) the handler {@link apiFetch} calls once when
+ * an authenticated request comes back `401`, to silently refresh the token and
+ * retry. The auth module installs this at startup.
+ */
+export function setAuthRefreshHandler(handler: AuthRefreshHandler | null): void {
+  authRefreshHandler = handler;
 }
 
 /**
@@ -36,18 +60,36 @@ export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { body, token, headers, ...rest } = options;
+  const { body, token, headers, skipAuthRefresh, ...rest } = options;
   const url = `${env.apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const response = await fetch(url, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const send = (bearer?: string) =>
+    fetch(url, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...headers,
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+
+  let response = await send(token);
+
+  // The access token likely expired: run a one-shot silent refresh and, if it
+  // yields a new token, retry the request once. Only for authenticated requests
+  // that opted in (a `token` was sent) and not the refresh call itself.
+  if (
+    response.status === 401 &&
+    token !== undefined &&
+    !skipAuthRefresh &&
+    authRefreshHandler
+  ) {
+    const newToken = await authRefreshHandler();
+    if (newToken) {
+      response = await send(newToken);
+    }
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
