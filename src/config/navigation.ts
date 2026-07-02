@@ -1,7 +1,6 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   faGaugeHigh,
-  faBoxesStacked,
   faUsers,
   faFileInvoiceDollar,
 } from "@/lib/icons";
@@ -18,7 +17,6 @@ export interface NavItem {
  */
 export const primaryNav: NavItem[] = [
   { label: "Dashboard", href: "/", icon: faGaugeHigh },
-  { label: "Inventory", href: "/inventory", icon: faBoxesStacked },
   { label: "Customers", href: "/customers", icon: faUsers },
   { label: "Invoices", href: "/invoices", icon: faFileInvoiceDollar },
 ];
