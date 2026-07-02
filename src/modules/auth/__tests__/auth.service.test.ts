@@ -5,9 +5,11 @@ import {
   REFRESH_TOKEN_KEY,
   clearTokens,
   getCurrentUser,
+  handleAuthRefresh,
   login,
   readAccessToken,
   readRefreshToken,
+  refresh,
   storeTokens,
 } from "../services/auth.service";
 
@@ -69,6 +71,59 @@ describe("auth.service", () => {
 
       expect(get).toHaveBeenCalledWith("/auth/me", { token: "acc-1" });
       expect(result).toEqual(user);
+    });
+  });
+
+  describe("refresh", () => {
+    it("posts the stored refresh token (skipping re-refresh) and persists the new pair", async () => {
+      storeTokens({ accessToken: "acc-1", refreshToken: "ref-1" });
+      const next = { accessToken: "acc-2", refreshToken: "ref-2" };
+      post.mockResolvedValue({ success: true, data: next });
+
+      const result = await refresh();
+
+      expect(post).toHaveBeenCalledWith(
+        "/auth/refresh",
+        { refreshToken: "ref-1" },
+        { skipAuthRefresh: true },
+      );
+      expect(result).toEqual(next);
+      expect(readAccessToken()).toBe("acc-2");
+      expect(readRefreshToken()).toBe("ref-2");
+    });
+
+    it("throws when no refresh token is stored", async () => {
+      await expect(refresh()).rejects.toThrow(/no refresh token/i);
+      expect(post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleAuthRefresh", () => {
+    it("returns the new access token and dedupes concurrent calls", async () => {
+      storeTokens({ accessToken: "acc-1", refreshToken: "ref-1" });
+      post.mockResolvedValue({
+        success: true,
+        data: { accessToken: "acc-2", refreshToken: "ref-2" },
+      });
+
+      const [a, b] = await Promise.all([
+        handleAuthRefresh(),
+        handleAuthRefresh(),
+      ]);
+
+      expect(a).toBe("acc-2");
+      expect(b).toBe("acc-2");
+      // A burst of 401s triggers a single token exchange.
+      expect(post).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears tokens and resolves null when refresh fails", async () => {
+      storeTokens({ accessToken: "acc-1", refreshToken: "ref-1" });
+      post.mockRejectedValue(new Error("invalid refresh token"));
+
+      await expect(handleAuthRefresh()).resolves.toBeNull();
+      expect(readAccessToken()).toBeNull();
+      expect(readRefreshToken()).toBeNull();
     });
   });
 

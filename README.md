@@ -156,6 +156,13 @@ import { AuthProvider, useAuth, LoginForm } from "@/modules/auth";
     `readRefreshToken` / `clearTokens`) keep the JWT pair in `localStorage`
     under `mini-erp.accessToken` / `mini-erp.refreshToken`. All are guarded with
     `typeof window` so they're SSR-safe.
+  - `refresh()` → `POST /auth/refresh` exchanges the stored refresh token for a
+    fresh pair. `installAuthRefresh()` (invoked once when `AuthProvider` loads)
+    registers a **silent-refresh-on-401** handler with `@/lib/api`: any
+    authenticated request that comes back `401` transparently refreshes the
+    token and retries once (concurrent 401s are deduped into a single exchange);
+    if refresh fails, the tokens are cleared so the route guard sends the user to
+    `/login`.
 - **`AuthProvider`** (wraps the app in `src/app/layout.tsx`) exposes
   `useAuth() → { user, login, logout, isLoading }`. On mount it hydrates the
   user from a stored token via `getCurrentUser`; `logout` clears tokens and
