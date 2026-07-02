@@ -38,7 +38,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 border-r border-outline-variant bg-surface-container-lowest p-4",
           "transition-transform duration-200 ease-out",
-          "lg:static lg:translate-x-0",
+          // From lg up: in-flow but pinned to the top of the viewport so the rail
+          // stays put while the page scrolls (own height, scrolls internally if tall).
+          "lg:sticky lg:top-0 lg:h-dvh lg:self-start lg:translate-x-0 lg:overflow-y-auto",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
