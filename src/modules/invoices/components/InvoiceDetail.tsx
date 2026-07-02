@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import { formatMoney, getInvoice } from "../services/invoices.service";
 import { getStoredToken } from "../services/token";
 import type { Invoice } from "../types";
+import { InvoiceItemsEditor } from "./InvoiceItemsEditor";
 import { InvoicesSkeleton } from "./InvoicesSkeleton";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 
@@ -94,82 +95,9 @@ export function InvoiceDetail({ id }: InvoiceDetailProps) {
           </div>
         </header>
 
-        {/* Items — read-only summary today; the add-items plan makes it editable. */}
+        {/* Items — editable line-item table (add-items plan). */}
         <section aria-labelledby="invoice-items-heading">
-          <Card className="overflow-hidden p-0">
-            <div className="border-b border-outline-variant p-4">
-              <h2
-                id="invoice-items-heading"
-                className="text-label-md text-on-surface-variant"
-              >
-                Items
-              </h2>
-            </div>
-            {invoice.items.length === 0 ? (
-              <p className="p-6 text-center text-body-md text-on-surface-variant">
-                No line items on this invoice yet.
-              </p>
-            ) : (
-              <table className="w-full text-left text-body-md">
-                <thead className="border-b border-outline-variant text-label-md text-on-surface-variant">
-                  <tr>
-                    <th scope="col" className="p-4 font-medium">
-                      Description
-                    </th>
-                    <th scope="col" className="p-4 text-right font-medium">
-                      Qty
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden p-4 text-right font-medium sm:table-cell"
-                    >
-                      Unit price
-                    </th>
-                    <th scope="col" className="p-4 text-right font-medium">
-                      Line total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoice.items.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-outline-variant last:border-b-0"
-                    >
-                      <td className="p-4 text-on-surface">{item.description}</td>
-                      <td className="p-4 text-right text-on-surface-variant">
-                        {item.quantity}
-                      </td>
-                      <td className="hidden p-4 text-right text-on-surface-variant sm:table-cell">
-                        {formatMoney(item.unitPrice)}
-                      </td>
-                      <td className="p-4 text-right text-on-surface">
-                        {formatMoney(item.lineTotal)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            <dl className="space-y-1 border-t border-outline-variant p-4 text-body-md">
-              <div className="flex justify-between">
-                <dt className="text-on-surface-variant">Subtotal</dt>
-                <dd className="text-on-surface">{formatMoney(invoice.subtotal)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-on-surface-variant">
-                  Tax ({invoice.taxRate}%)
-                </dt>
-                <dd className="text-on-surface">{formatMoney(invoice.taxAmount)}</dd>
-              </div>
-              <div className="flex justify-between text-label-md">
-                <dt className="font-medium text-on-surface">Total</dt>
-                <dd className="font-medium text-on-surface">
-                  {formatMoney(invoice.total)}
-                </dd>
-              </div>
-            </dl>
-          </Card>
+          <InvoiceItemsEditor invoice={invoice} onUpdated={setInvoice} />
         </section>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

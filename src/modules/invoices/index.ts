@@ -11,6 +11,11 @@
  */
 export { InvoiceForm } from "./components/InvoiceForm";
 export { InvoiceDetail } from "./components/InvoiceDetail";
+export {
+  InvoiceItemsEditor,
+  canEditItems,
+  type InvoiceItemsEditorProps,
+} from "./components/InvoiceItemsEditor";
 export { InvoicesSkeleton } from "./components/InvoicesSkeleton";
 export { InvoiceStatusBadge } from "./components/InvoiceStatusBadge";
 export {
