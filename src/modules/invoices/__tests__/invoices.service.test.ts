@@ -4,6 +4,9 @@ import {
   createInvoice,
   getInvoice,
   updateStatus,
+  addItem,
+  updateItem,
+  removeItem,
   formatMoney,
   computeTotals,
 } from "../services/invoices.service";
@@ -91,6 +94,49 @@ describe("updateStatus", () => {
       { token: "jwt-1" },
     );
     expect(data).toEqual(sent);
+  });
+});
+
+describe("addItem", () => {
+  it("POSTs the item to /invoices/:id/items and unwraps data", async () => {
+    vi.mocked(api.post).mockResolvedValue(envelope(invoice));
+    const item = { description: "Design", quantity: 1, unitPrice: 80 };
+
+    const data = await addItem("inv1", item, "jwt-1");
+
+    expect(api.post).toHaveBeenCalledWith("/invoices/inv1/items", item, {
+      token: "jwt-1",
+    });
+    expect(data).toEqual(invoice);
+  });
+});
+
+describe("updateItem", () => {
+  it("PATCHes /invoices/:id/items/:itemId and unwraps data", async () => {
+    vi.mocked(api.patch).mockResolvedValue(envelope(invoice));
+    const patch = { quantity: 3 };
+
+    const data = await updateItem("inv1", "it1", patch, "jwt-1");
+
+    expect(api.patch).toHaveBeenCalledWith(
+      "/invoices/inv1/items/it1",
+      patch,
+      { token: "jwt-1" },
+    );
+    expect(data).toEqual(invoice);
+  });
+});
+
+describe("removeItem", () => {
+  it("DELETEs /invoices/:id/items/:itemId and unwraps data", async () => {
+    vi.mocked(api.delete).mockResolvedValue(envelope(invoice));
+
+    const data = await removeItem("inv1", "it1", "jwt-1");
+
+    expect(api.delete).toHaveBeenCalledWith("/invoices/inv1/items/it1", {
+      token: "jwt-1",
+    });
+    expect(data).toEqual(invoice);
   });
 });
 

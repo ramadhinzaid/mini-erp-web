@@ -9,7 +9,10 @@ export interface StatCardProps {
 
 /** Presentational KPI tile. Pure: derives everything from props. */
 export function StatCard({ stat }: StatCardProps) {
-  const isPositive = stat.delta >= 0;
+  // The live summary endpoint has no period-over-period delta, so the chip only
+  // renders when a delta is actually provided.
+  const hasDelta = stat.delta !== undefined;
+  const isPositive = (stat.delta ?? 0) >= 0;
 
   return (
     <Card className="p-5">
@@ -17,15 +20,20 @@ export function StatCard({ stat }: StatCardProps) {
         <span className="grid h-10 w-10 place-items-center rounded-md bg-secondary-container text-primary">
           <Icon icon={stat.icon} className="h-5 w-5" />
         </span>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 text-body-md font-medium",
-            isPositive ? "text-success" : "text-error",
-          )}
-        >
-          <Icon icon={isPositive ? faArrowUp : faArrowDown} className="h-3 w-3" />
-          {Math.abs(stat.delta)}%
-        </span>
+        {hasDelta && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-body-md font-medium",
+              isPositive ? "text-success" : "text-error",
+            )}
+          >
+            <Icon
+              icon={isPositive ? faArrowUp : faArrowDown}
+              className="h-3 w-3"
+            />
+            {Math.abs(stat.delta as number)}%
+          </span>
+        )}
       </div>
       <p className="mt-4 text-headline-md">{stat.value}</p>
       <p className="text-body-sm text-on-surface-variant">{stat.label}</p>

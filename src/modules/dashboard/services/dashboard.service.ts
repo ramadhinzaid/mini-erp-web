@@ -1,57 +1,94 @@
+import { api } from "@/lib/api";
+import { formatMoney } from "@/modules/invoices";
+import type { InvoiceStatus } from "@/modules/invoices";
 import {
   faFileInvoiceDollar,
-  faBoxesStacked,
-  faUsers,
   faChartLine,
+  faGaugeHigh,
+  faUsers,
 } from "@/lib/icons";
-import type { DashboardStat } from "../types";
+import type { DashboardStat, DashboardSummary } from "../types";
 
 /**
  * Data-access layer for the dashboard module.
  *
- * Returns mocked data for now — the NestJS backend (separate repo at
- * `../nestjs/mini-erp-be`) has no stats endpoint yet. The async signature
- * matches the real one, so swapping in the API client is a one-line change
- * with no impact on callers:
- *
- * @example
- * import { api } from "@/lib/api";
- * export const getDashboardStats = (token: string) =>
- *   api.get<DashboardStat[]>("/dashboard/stats", { token });
+ * Talks to the live NestJS Dashboard resource (see the companion
+ * `api-dashboard-summary` plan) through the single typed client in `@/lib/api`
+ * — never a raw `fetch`. `GET /dashboard/summary` is authenticated, so callers
+ * pass the Bearer token; the backend wraps the payload as `{ success, data }`,
+ * which this layer unwraps so components receive a plain {@link DashboardSummary}.
  *
  * Isolating I/O here keeps components pure and easy to test.
  */
-export async function getDashboardStats(): Promise<DashboardStat[]> {
-  // Simulated latency so loading states (skeletons) are demonstrable.
-  await new Promise((resolve) => setTimeout(resolve, 600));
 
+/** The backend wraps every successful response as `{ success, data }`. */
+interface Envelope<T> {
+  success: boolean;
+  data: T;
+}
+
+/**
+ * The dashboard's loaded data: the raw {@link DashboardSummary} for the new
+ * sections (status breakdown, recent invoices) plus the KPI cards derived from
+ * it, so the view can render both without re-deriving.
+ */
+export interface DashboardData {
+  summary: DashboardSummary;
+  stats: DashboardStat[];
+}
+
+/**
+ * Fetches the dashboard summary and maps it into the KPI {@link DashboardStat}s.
+ *
+ * Async signature preserved from the previous `getDashboardStats()` so callers
+ * and skeletons are unaffected by the swap from mocked to live data.
+ */
+export async function getDashboardSummary(
+  token?: string,
+): Promise<DashboardData> {
+  const res = await api.get<Envelope<DashboardSummary>>("/dashboard/summary", {
+    token,
+  });
+  const summary = res.data;
+  return { summary, stats: summaryToStats(summary) };
+}
+
+/** Total number of invoices across every status bucket. */
+export function totalInvoiceCount(
+  counts: Record<InvoiceStatus, number>,
+): number {
+  return Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0);
+}
+
+/**
+ * Maps a {@link DashboardSummary} into the four headline KPI cards
+ * (revenue, outstanding, invoices, customers). No `delta` is set — the endpoint
+ * doesn't return period-over-period change — so the cards omit the delta chip.
+ */
+export function summaryToStats(summary: DashboardSummary): DashboardStat[] {
   return [
     {
       id: "revenue",
       label: "Revenue",
-      value: "$48,290",
-      delta: 12.5,
+      value: formatMoney(summary.revenue),
       icon: faFileInvoiceDollar,
     },
     {
-      id: "orders",
-      label: "Orders",
-      value: "1,204",
-      delta: 4.1,
+      id: "outstanding",
+      label: "Outstanding",
+      value: formatMoney(summary.outstanding),
       icon: faChartLine,
     },
     {
-      id: "inventory",
-      label: "In Stock",
-      value: "8,932",
-      delta: -2.3,
-      icon: faBoxesStacked,
+      id: "invoices",
+      label: "Invoices",
+      value: String(totalInvoiceCount(summary.invoiceCounts)),
+      icon: faGaugeHigh,
     },
     {
       id: "customers",
       label: "Customers",
-      value: "612",
-      delta: 6.7,
+      value: String(summary.customerCount),
       icon: faUsers,
     },
   ];
