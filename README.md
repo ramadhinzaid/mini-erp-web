@@ -311,9 +311,9 @@ parallel modules. Consume it only through its `index.ts`.
   on success redirects to `/invoices/[id]`.
 - **Detail shell** — `InvoiceDetail` (client) loads an invoice via `getInvoice`
   and renders the header (number, customer, `InvoiceStatusBadge`, total), the
-  editable items table (see below), and the **activity timeline**. The
-  status-controls region is a labelled slot the update-status plan fills in; load
-  failures show a `text-error` message.
+  editable items table (see below), the Status section (hosting the
+  `InvoiceStatusControl`), and the **activity timeline**. Load failures show a
+  `text-error` message.
 - **Items editor** — `InvoiceItemsEditor` (client) makes the detail page's items
   section editable: it lists each line item (description, qty, unit price, line
   total) with inline **Edit** and **Remove** controls and an **Add item** form.
@@ -335,6 +335,24 @@ parallel modules. Consume it only through its `index.ts`.
 - **Status badge** — `InvoiceStatusBadge` maps each status to a semantic token
   pair (`DRAFT`→neutral, `SENT`→secondary, `PAID`→success, `VOID`→error,
   `OVERDUE`→tertiary/warning), reused across the invoice surfaces.
+- **Status control** — `InvoiceStatusControl` (client) sits in the detail's
+  Status section. It shows the current status via `InvoiceStatusBadge` (including
+  the derived `OVERDUE`) and offers only the **valid next actions** for that
+  status via `updateStatus` — never a transition out of a terminal status and
+  never the derived `OVERDUE`. The lifecycle is `DRAFT→SENT→PAID` (+ `VOID`), so
+  the UI exposes:
+
+  | Current status | Actions offered |
+  | --- | --- |
+  | `DRAFT` | **Mark as sent** → `SENT`, **Void** → `VOID` |
+  | `SENT` (and derived `OVERDUE`) | **Mark as paid** → `PAID`, **Void** → `VOID` |
+  | `PAID`, `VOID` | none (terminal) |
+
+  **Void** is gated on the user's role from `useAuth()` (ADMIN only) and requires
+  an explicit confirmation before it is sent. A `Spinner` shows while a
+  transition is pending; on success the badge/invoice update in place; a `409`
+  (illegal transition) or `403` (not permitted) surfaces as a friendly
+  `text-error` message.
 - **Service** — `invoices.service.ts` wraps the Invoices REST resource through
   the typed `@/lib/api` client and unwraps the `{ success, data }` envelope. It
   also exports `formatMoney` (formats `Decimal` money) and `computeTotals`

@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import {
   createInvoice,
   getInvoice,
+  updateStatus,
   listInvoices,
   getInvoiceEvents,
   deriveInvoiceStatus,
@@ -80,6 +81,22 @@ describe("getInvoice", () => {
 
     expect(api.get).toHaveBeenCalledWith("/invoices/inv1", { token: "jwt-1" });
     expect(data).toEqual(invoice);
+  });
+});
+
+describe("updateStatus", () => {
+  it("PATCHes /invoices/:id/status with the new status and unwraps data", async () => {
+    const sent: Invoice = { ...invoice, status: "SENT" };
+    vi.mocked(api.patch).mockResolvedValue(envelope(sent));
+
+    const data = await updateStatus("inv1", "SENT", "jwt-1");
+
+    expect(api.patch).toHaveBeenCalledWith(
+      "/invoices/inv1/status",
+      { status: "SENT" },
+      { token: "jwt-1" },
+    );
+    expect(data).toEqual(sent);
   });
 });
 

@@ -21,6 +21,7 @@ export {
 export { InvoicesSkeleton } from "./components/InvoicesSkeleton";
 export { InvoicesListSkeleton } from "./components/InvoicesListSkeleton";
 export { InvoiceStatusBadge } from "./components/InvoiceStatusBadge";
+export { InvoiceStatusControl } from "./components/InvoiceStatusControl";
 export {
   createInvoice,
   getInvoice,

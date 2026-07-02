@@ -10,6 +10,7 @@ import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
 import { InvoiceItemsEditor } from "./InvoiceItemsEditor";
 import { InvoicesSkeleton } from "./InvoicesSkeleton";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
+import { InvoiceStatusControl } from "./InvoiceStatusControl";
 
 export interface InvoiceDetailProps {
   /** Id of the invoice to display (from the `/invoices/[id]` route param). */
@@ -102,21 +103,16 @@ export function InvoiceDetail({ id }: InvoiceDetailProps) {
         </section>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Status controls — filled by the update-status plan. */}
+          {/* Status controls — valid next-status actions for this invoice. */}
           <section aria-labelledby="invoice-status-heading">
-            <Card className="space-y-2 p-5">
+            <Card className="space-y-3 p-5">
               <h2
                 id="invoice-status-heading"
                 className="text-label-md text-on-surface-variant"
               >
                 Status
               </h2>
-              <div className="flex items-center gap-2">
-                <InvoiceStatusBadge status={invoice.status} />
-                <span className="text-body-sm text-on-surface-variant">
-                  Status actions coming soon.
-                </span>
-              </div>
+              <InvoiceStatusControl invoice={invoice} onUpdated={setInvoice} />
             </Card>
           </section>
 
