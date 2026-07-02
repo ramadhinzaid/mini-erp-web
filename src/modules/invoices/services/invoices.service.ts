@@ -41,6 +41,12 @@ export interface InvoiceListParams {
   status?: InvoiceStatus;
   /** Filter by owning customer. */
   customerId?: string;
+  /** Free-text search (invoice number / customer name). */
+  search?: string;
+  /** Inclusive lower bound on issue date (ISO `YYYY-MM-DD`). */
+  issuedFrom?: string;
+  /** Inclusive upper bound on issue date (ISO `YYYY-MM-DD`). */
+  issuedTo?: string;
   /** Bearer token for the authenticated request. */
   token?: string;
 }
@@ -75,7 +81,16 @@ export async function getInvoice(id: string, token?: string): Promise<Invoice> {
 export async function listInvoices(
   params: InvoiceListParams = {},
 ): Promise<InvoiceListResult> {
-  const { page = 1, limit = 10, status, customerId, token } = params;
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    customerId,
+    search,
+    issuedFrom,
+    issuedTo,
+    token,
+  } = params;
 
   const query = new URLSearchParams({
     page: String(page),
@@ -83,6 +98,9 @@ export async function listInvoices(
   });
   if (status) query.set("status", status);
   if (customerId) query.set("customerId", customerId);
+  if (search && search.trim()) query.set("search", search.trim());
+  if (issuedFrom) query.set("issuedFrom", issuedFrom);
+  if (issuedTo) query.set("issuedTo", issuedTo);
 
   const res = await api.get<Envelope<InvoiceListResult>>(
     `${RESOURCE}?${query.toString()}`,
@@ -195,4 +213,27 @@ export function computeTotals(
   const rate = Number(taxRate) || 0;
   const taxAmount = subtotal * (rate / 100);
   return { subtotal, taxAmount, total: subtotal + taxAmount };
+}
+
+/**
+ * Resolves the status to *display* for an invoice, deriving `OVERDUE` for a
+ * still-open (`SENT`) invoice whose due date has passed. Terminal states
+ * (`PAID`, `VOID`) and an already-`OVERDUE`/`DRAFT` invoice are returned as-is.
+ *
+ * The backend is the source of truth, but between a due date lapsing and the
+ * server recomputing it the list would otherwise show a stale `SENT` badge;
+ * deriving on the client keeps the timeline honest. `now` is injectable for
+ * deterministic tests.
+ */
+export function deriveInvoiceStatus(
+  invoice: Pick<Invoice, "status" | "dueDate">,
+  now: Date = new Date(),
+): InvoiceStatus {
+  if (invoice.status === "SENT" && invoice.dueDate) {
+    const due = new Date(invoice.dueDate);
+    if (!Number.isNaN(due.getTime()) && due.getTime() < now.getTime()) {
+      return "OVERDUE";
+    }
+  }
+  return invoice.status;
 }

@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import { formatMoney, getInvoice } from "../services/invoices.service";
 import { getStoredToken } from "../services/token";
 import type { Invoice } from "../types";
+import { InvoiceActivityTimeline } from "./InvoiceActivityTimeline";
 import { InvoiceItemsEditor } from "./InvoiceItemsEditor";
 import { InvoicesSkeleton } from "./InvoicesSkeleton";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
@@ -119,18 +120,16 @@ export function InvoiceDetail({ id }: InvoiceDetailProps) {
             </Card>
           </section>
 
-          {/* Activity timeline — filled by the history plan. */}
+          {/* Activity timeline — sourced from the invoice's audit trail. */}
           <section aria-labelledby="invoice-activity-heading">
-            <Card className="space-y-2 p-5">
+            <Card className="space-y-3 p-5">
               <h2
                 id="invoice-activity-heading"
                 className="text-label-md text-on-surface-variant"
               >
                 Activity
               </h2>
-              <p className="text-body-sm text-on-surface-variant">
-                The activity timeline will appear here.
-              </p>
+              <InvoiceActivityTimeline invoiceId={invoice.id} />
             </Card>
           </section>
         </div>
