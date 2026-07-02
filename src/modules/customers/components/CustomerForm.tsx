@@ -73,7 +73,9 @@ export function CustomerForm({ customer, onSuccess, onCancel }: CustomerFormProp
       company: clean(company),
       address: clean(address),
       notes: clean(notes),
-      isActive,
+      // `isActive` is only accepted on update — the create endpoint rejects
+      // unknown properties and defaults new customers to active server-side.
+      ...(isEdit ? { isActive } : {}),
     };
 
     setSubmitting(true);
@@ -215,16 +217,18 @@ export function CustomerForm({ customer, onSuccess, onCancel }: CustomerFormProp
             />
           </div>
 
-          <label className="flex items-center gap-2 text-body-md text-on-surface">
-            <input
-              type="checkbox"
-              name="isActive"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 accent-primary"
-            />
-            Active
-          </label>
+          {isEdit && (
+            <label className="flex items-center gap-2 text-body-md text-on-surface">
+              <input
+                type="checkbox"
+                name="isActive"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Active
+            </label>
+          )}
 
           {submitError && (
             <p role="alert" className="text-body-sm text-error">
