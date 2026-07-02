@@ -29,6 +29,16 @@ interface Envelope<T> {
   data: T;
 }
 
+/**
+ * Raw body the backend's paginated list endpoints return (inside the envelope):
+ * `{ data, meta: { page, limit, total, totalPages } }`. Mapped to the module's
+ * {@link InvoiceListResult} shape below.
+ */
+interface PaginatedBody<T> {
+  data: T[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
 const RESOURCE = "/invoices";
 
 /** Query parameters for the paginated {@link listInvoices} call. */
@@ -102,11 +112,12 @@ export async function listInvoices(
   if (issuedFrom) query.set("issuedFrom", issuedFrom);
   if (issuedTo) query.set("issuedTo", issuedTo);
 
-  const res = await api.get<Envelope<InvoiceListResult>>(
+  const res = await api.get<Envelope<PaginatedBody<Invoice>>>(
     `${RESOURCE}?${query.toString()}`,
     { token },
   );
-  return res.data;
+  const { data, meta } = res.data;
+  return { items: data, total: meta.total, page: meta.page, limit: meta.limit };
 }
 
 /** Adds a line item to an existing invoice (add-items plan). */

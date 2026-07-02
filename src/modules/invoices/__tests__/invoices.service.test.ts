@@ -101,9 +101,13 @@ describe("updateStatus", () => {
 });
 
 describe("listInvoices", () => {
-  it("GETs the paginated path with all filters and unwraps data", async () => {
-    const result = { items: [invoice], total: 1, page: 2, limit: 10 };
-    vi.mocked(api.get).mockResolvedValue(envelope(result));
+  it("GETs the paginated path and maps the backend's { data, meta } to { items, total, page, limit }", async () => {
+    vi.mocked(api.get).mockResolvedValue(
+      envelope({
+        data: [invoice],
+        meta: { page: 2, limit: 10, total: 1, totalPages: 1 },
+      }),
+    );
 
     const data = await listInvoices({
       page: 2,
@@ -119,12 +123,15 @@ describe("listInvoices", () => {
       "/invoices?page=2&limit=10&status=SENT&customerId=c1&search=acme&issuedFrom=2026-01-01&issuedTo=2026-12-31",
       { token: "jwt-1" },
     );
-    expect(data).toEqual(result);
+    expect(data).toEqual({ items: [invoice], total: 1, page: 2, limit: 10 });
   });
 
   it("defaults to page 1 / limit 10 and omits empty filters", async () => {
     vi.mocked(api.get).mockResolvedValue(
-      envelope({ items: [], total: 0, page: 1, limit: 10 }),
+      envelope({
+        data: [],
+        meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+      }),
     );
 
     await listInvoices();

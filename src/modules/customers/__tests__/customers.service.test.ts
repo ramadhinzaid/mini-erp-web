@@ -37,9 +37,13 @@ beforeEach(() => {
 });
 
 describe("listCustomers", () => {
-  it("GETs the paginated path with page, limit and search, and unwraps data", async () => {
-    const result = { items: [customer], total: 1, page: 2, limit: 10 };
-    vi.mocked(api.get).mockResolvedValue(envelope(result));
+  it("GETs the paginated path and maps the backend's { data, meta } to { items, total, page, limit }", async () => {
+    vi.mocked(api.get).mockResolvedValue(
+      envelope({
+        data: [customer],
+        meta: { page: 2, limit: 10, total: 1, totalPages: 1 },
+      }),
+    );
 
     const data = await listCustomers({
       page: 2,
@@ -51,12 +55,15 @@ describe("listCustomers", () => {
       "/customers?page=2&limit=10&search=acme",
       { token: "jwt-1" },
     );
-    expect(data).toEqual(result);
+    expect(data).toEqual({ items: [customer], total: 1, page: 2, limit: 10 });
   });
 
   it("defaults to page 1 / limit 10 and omits an empty search", async () => {
     vi.mocked(api.get).mockResolvedValue(
-      envelope({ items: [], total: 0, page: 1, limit: 10 }),
+      envelope({
+        data: [],
+        meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+      }),
     );
 
     await listCustomers();

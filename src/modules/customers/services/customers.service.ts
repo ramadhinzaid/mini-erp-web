@@ -26,6 +26,16 @@ interface Envelope<T> {
   data: T;
 }
 
+/**
+ * Raw body the backend's paginated list endpoints return (inside the envelope):
+ * `{ data, meta: { page, limit, total, totalPages } }`. Mapped to the module's
+ * {@link CustomerListResult} shape below.
+ */
+interface PaginatedBody<T> {
+  data: T[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
 const RESOURCE = "/customers";
 
 /** Lists customers, paginated and optionally filtered by a search term. */
@@ -40,11 +50,12 @@ export async function listCustomers(
   });
   if (search.trim()) query.set("search", search.trim());
 
-  const res = await api.get<Envelope<CustomerListResult>>(
+  const res = await api.get<Envelope<PaginatedBody<Customer>>>(
     `${RESOURCE}?${query.toString()}`,
     { token },
   );
-  return res.data;
+  const { data, meta } = res.data;
+  return { items: data, total: meta.total, page: meta.page, limit: meta.limit };
 }
 
 /** Fetches a single customer by id. */
