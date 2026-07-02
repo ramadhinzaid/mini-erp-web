@@ -73,6 +73,8 @@ describe("CustomerForm — create", () => {
     await waitFor(() => expect(createCustomer).toHaveBeenCalledTimes(1));
     const [payload] = vi.mocked(createCustomer).mock.calls[0];
     expect(payload).toMatchObject({ name: "Bob", email: "bob@acme.com" });
+    // The create endpoint rejects `isActive`; it must not be sent.
+    expect(payload).not.toHaveProperty("isActive");
     expect(onSuccess).toHaveBeenCalledWith(
       expect.objectContaining({ id: "new" }),
       "create",
@@ -104,6 +106,8 @@ describe("CustomerForm — edit", () => {
     const [id, payload] = vi.mocked(updateCustomer).mock.calls[0];
     expect(id).toBe("c1");
     expect(payload).toMatchObject({ name: "Acme Inc" });
+    // Update accepts `isActive` (activate/deactivate); it must be sent.
+    expect(payload).toHaveProperty("isActive", true);
     expect(onSuccess).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Acme Inc" }),
       "edit",
