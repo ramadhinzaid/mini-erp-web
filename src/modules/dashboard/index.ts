@@ -8,5 +8,14 @@
  */
 export { DashboardView } from "./components/DashboardView";
 export { DashboardSkeleton } from "./components/DashboardSkeleton";
-export { getDashboardStats } from "./services/dashboard.service";
-export type { DashboardStat } from "./types";
+export {
+  getDashboardSummary,
+  summaryToStats,
+  totalInvoiceCount,
+  type DashboardData,
+} from "./services/dashboard.service";
+export type {
+  DashboardStat,
+  DashboardSummary,
+  RecentInvoice,
+} from "./types";

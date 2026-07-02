@@ -180,7 +180,7 @@ import { AuthProvider, useAuth, LoginForm } from "@/modules/auth";
 src/
 ├─ app/                      # Next.js App Router — routing layer ONLY (thin)
 │  ├─ layout.tsx             # Root layout: fonts, Font Awesome, AuthProvider, AppShell
-│  ├─ page.tsx               # Dashboard route (fetches via module service)
+│  ├─ page.tsx               # Dashboard route (renders the module's DashboardView)
 │  ├─ login/page.tsx         # Public sign-in route (renders auth module's LoginForm)
 │  ├─ loading.tsx            # Route-level Suspense fallback (skeleton)
 │  ├─ customers/             # Customers route (page + loading skeleton)
@@ -200,10 +200,10 @@ src/
 │  │  ├─ types/              #   Credentials, AuthTokens, AuthUser
 │  │  ├─ __tests__/          #   LoginForm + auth.service tests
 │  │  └─ index.ts            #   PUBLIC API
-│  ├─ dashboard/             # Example module — see src/modules/README.md
-│  │  ├─ components/         #   feature UI
-│  │  ├─ services/           #   data access / business logic
-│  │  ├─ types/              #   feature-owned types
+│  ├─ dashboard/             # Business summary at `/` — see below
+│  │  ├─ components/         #   DashboardView, StatCard, DashboardSkeleton
+│  │  ├─ services/           #   dashboard.service (GET /dashboard/summary)
+│  │  ├─ types/              #   DashboardStat, DashboardSummary, RecentInvoice
 │  │  ├─ __tests__/          #   co-located tests
 │  │  └─ index.ts            #   PUBLIC API (the only allowed import path)
 │  ├─ customers/             # Customers CRUD module (list/create/edit/delete)
@@ -223,6 +223,31 @@ The `@/*` path alias maps to `src/*`. Project docs live in `docs/`
 ([`docs/DESIGN.md`](docs/DESIGN.md) — the design system).
 
 ## Feature modules
+
+### Dashboard (`src/modules/dashboard`)
+
+The business overview at the **`/`** route. It consumes the live
+**`GET /dashboard/summary`** endpoint (no longer mocked) and unwraps the
+backend's `{ success, data }` envelope. Consume the module only through its
+`index.ts`.
+
+- **Route** — `src/app/page.tsx` is thin: it renders `DashboardView` from the
+  module, which owns its own client-side fetch, loading, and error states.
+- **View** — `DashboardView` (client) fetches the summary on mount (authenticated
+  with the stored Bearer token) and renders, from real data: the KPI `StatCard`s,
+  a per-status **invoice breakdown** (reusing the invoices module's
+  `InvoiceStatusBadge`), and a **recent invoices** list where each row links to
+  `/invoices/[id]`. It shows `DashboardSkeleton` while loading and a `text-error`
+  message on failure.
+- **Service** — `dashboard.service.ts` exposes `getDashboardSummary(token)` →
+  `GET /dashboard/summary`, returning the raw `DashboardSummary` plus the KPI
+  `DashboardStat[]` mapped from it (`summaryToStats`). Money is formatted with the
+  invoices module's `formatMoney`; the token is read via `getStoredToken()` today
+  (`useAuth()` later), matching the other modules.
+- **Surfaced metrics** — `revenue`, `outstanding`, total `invoices` and
+  `customerCount` as KPI cards; invoice counts **per status** (including the
+  derived `OVERDUE` bucket); and the most recent invoices (number, customer,
+  status, total).
 
 ### Customers (`src/modules/customers`)
 
